@@ -36,7 +36,7 @@ module.exports = [
         var table2 = {
             PartitionKey : {'_': 'Desbloqueo cuenta', '$':'Edm.String'},
             RowKey: {'_': session.dialogData.cuenta, '$':'Edm.String'},
-            Status: {'_': 'Noexiste', '$':'Edm.String'}
+            Status: {'_': 'Desbloqueado', '$':'Edm.String'}
         };
         tableService.insertOrReplaceEntity ('ps2table', table2, function(error) {
         if(!error) {
@@ -48,21 +48,21 @@ module.exports = [
             // random.id = '';
             // QUERY TABLE ENTITY 
             session.sendTyping();
+            session.send('Estamos atendiendo tu solicitud. Espera un momento...');
             setTimeout(() => {
                 
                 tableService.retrieveEntity('ps2table', 'Desbloqueo cuenta', session.dialogData.cuenta, function(error, result, response) {
                     // var unlock = result.Status._;
-                    session.send(session.dialogData.cuenta);
                     if(!error && result.Status._=='Desbloqueado') {
             
-                        session.send(`Me solicitaste **Desbloquear tu cuenta**, la cuenta ha sido desbloqueada. Saludos.`);
+                        session.endDialog(`Me solicitaste **Desbloquear tu cuenta**, la cuenta ha sido desbloqueada. Saludos.`);
                             
                     }else if(!error && result.Status._=='Noexiste'){
                 
-                        session.send(`La cuenta solicitada **No existe**. Saludos.`);
+                        session.endDialog(`La cuenta solicitada **No existe**. Saludos.`);
                     }
                     else{
-                        session.send("error");
+                        session.endDialog("**Error:** Por favor intentalo más tarde.");
                 
                     }
     

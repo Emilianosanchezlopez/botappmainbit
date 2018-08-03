@@ -54,21 +54,21 @@ module.exports = [
             // random.id = '';
             // QUERY TABLE ENTITY 
             session.sendTyping();
+            session.send('Estamos atendiendo tu solicitud. Espera un momento...');
             setTimeout(() => {
                 
                 tableService.retrieveEntity('ps2table', session.dialogData.accion, session.dialogData.cuenta, function(error, result, response) {
                     // var unlock = result.Status._;
-                    session.send(session.dialogData.cuenta);
                     if(!error && result.Status._=='Valido') {
             
-                        session.send(`Solicitaste **Resetear tu contraseña**, tu nueva contraseña es **${randomid}**. Saludos.`);
+                        session.endDialog(`Solicitaste **Resetear tu contraseña**, tu nueva contraseña es **${randomid}**. Saludos.`);
                             
                     }else if(!error && result.Status._=='Novalido'){
                 
-                        session.send(`La operación **Resetear contraseña** no es válida. Saludos.`);
+                        session.endDialog(`La operación **Resetear contraseña** no es válida. Saludos.`);
                     }
                     else{
-                        session.send("error");
+                        session.endDialog("**Error:** Por favor intentalo más tarde.");
                 
                     }
     
