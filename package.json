@@ -10,6 +10,7 @@
   "author": "",
   "license": "ISC",
   "dependencies": {
+    "authy-client": "^1.1.1",
     "botbuilder": "^3.13.1",
     "botbuilder-azure": "^3.0.4",
     "fs": "0.0.1-security",

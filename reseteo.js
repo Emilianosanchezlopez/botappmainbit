@@ -1,85 +1,63 @@
 var azurest = require('azure-storage');
-var restify = require('restify');
 var builder = require('botbuilder');
-var azure = require('botbuilder-azure'); 
+const Client = require('authy-client').Client;
+const client = new Client({ key: 'QtNx1BJygMZGbwtXfldWhKivqbTfZ5iW' });
 var tableService = azurest.createTableService('mainbotstorage','aAg3lqYxIsLeVV3nJ67HYWS7ye35OSThcemFar1zpnOvoOs6y5K5g0ZdITNoqwREhNHA58YAhI47Lj/a7cfxvw==');
 
 module.exports = [
-    function (session, results) {
-        session.dialogData.accion = 'Resetear contraseña';
-        builder.Prompts.text(session, `¿Cuál es tu cuenta? ejemplo: **aperez**`);
-    },
-    // function (session, results) {
-    //     session.dialogData.cuenta = results.response;
-    //     builder.Prompts.confirm(session, '¿Quieres ver un resumen?', { listStyle: builder.ListStyle.button });
-        
-        
-    // },
-    function (session, results) {
-        session.dialogData.cuenta = results.response;
-        // var random = require('./randomid');
-        var x = function myFunc() {
-            var y = "";
-            var possible = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
-            for( var i=0; i < 9; i++ )
-            y += possible.charAt(Math.floor(Math.random() * possible.length));
-            return y;
-            };
-            var randomid = x();
-            console.log(randomid);
-
-        var table1 = {
-            PartitionKey : {'_': session.dialogData.accion, '$':'Edm.String'},
-            RowKey: {'_': session.dialogData.cuenta, '$':'Edm.String'},
-            RandomId: {'_': randomid, '$':'Edm.String'}
-        };
-        tableService.insertOrReplaceEntity ('bot2table', table1, function(error) {
-        if(!error) {
-            console.log('Entity bot2table inserted');   // Entity inserted
-        }
-        }); 
-        var table2 = {
-            PartitionKey : {'_': 'Resetear contraseña', '$':'Edm.String'},
-            RowKey: {'_': session.dialogData.cuenta, '$':'Edm.String'},
-            Status: {'_': 'Novalido', '$':'Edm.String'},
-            Password: {'_': randomid, '$':'Edm.String'},
-        };
-        tableService.insertOrReplaceEntity ('ps2table', table2, function(error) {
-        if(!error) {
-            console.log('Entity ps2table inserted');   // Entity inserted
-        }
-        }); 
-        
-        if (results.response) {
-            // random.id = '';
-            // QUERY TABLE ENTITY 
-            session.sendTyping();
-            session.send('Estamos atendiendo tu solicitud. Espera un momento...');
-            setTimeout(() => {
-                
-                tableService.retrieveEntity('ps2table', session.dialogData.accion, session.dialogData.cuenta, function(error, result, response) {
-                    // var unlock = result.Status._;
-                    if(!error && result.Status._=='Valido') {
-            
-                        session.endDialog(`Solicitaste **Resetear tu contraseña**, tu nueva contraseña es **${randomid}**. Saludos.`);
-                            
-                    }else if(!error && result.Status._=='Novalido'){
-                
-                        session.endDialog(`La operación **Resetear contraseña** no es válida. Saludos.`);
-                    }
-                    else{
-                        session.endDialog("**Error:** Por favor intentalo más tarde.");
-                
-                    }
+function (session, results) {
+    session.dialogData.accion = 'Resetear contraseña';
+    builder.Prompts.text(session, `¿Cuál es tu cuenta? ejemplo: **aperez@mainbit.com.mx**`);
+},
+function (session, results) {
+    session.dialogData.cuenta = results.response.toLowerCase();
+    console.log(session.dialogData.cuenta);
     
-                });
-            }, 5000);
-                // session.endDialog(`Me solicitaste **${session.dialogData.accion}**, tu cuenta es **${session.dialogData.cuenta}**, Saludos.`);
+    tableService.retrieveEntity('Authy', session.dialogData.accion, session.dialogData.cuenta, function(error, result, response) {
+        let authyId1 = result.AuthyID._;
+            // Enviar SMS
+            console.log('El id del usuario es: '+authyId1);
+            client.requestSms({ authyId: authyId1 }, function (err, res) {
+                });  
+    });
+    builder.Prompts.text(session, 'Te enviamos un código SMS a tu celular **¿Cuál es el código?**')
+},
+function (session, results) {
+    session.dialogData.token1 = results.response;
+    var token2 = session.dialogData.token1;
+    console.log('Token es: '+ typeof(token2))
+    // session.send('Espera mientras validamos la operación...');
+    tableService.retrieveEntity('Authy', session.dialogData.accion, session.dialogData.cuenta, function(error, result, response) {
+        let authyId1 = result.AuthyID._;
+            console.log(authyId1)  
+            client.verifyToken({ authyId: authyId1, token: token2 })
+                .then(function(response) {
+                    var x = function myFunc() {
+                        var y = "";
+                        var possible = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
+                        for( var i=0; i < 9; i++ )
+                        y += possible.charAt(Math.floor(Math.random() * possible.length));
+                        return y;
+                        };
+                        var randomid = x();
+                        console.log(randomid);
             
-           
-        }
-        else {
-            session.endDialog('Adios!');
-        }
-    }
+                    var newPass = {
+                        PartitionKey : {'_': session.dialogData.accion, '$':'Edm.String'},
+                        RowKey: {'_': session.dialogData.cuenta, '$':'Edm.String'},
+                        RandomId: {'_': randomid, '$':'Edm.String'}
+                    };
+                    tableService.insertOrReplaceEntity ('bot2table', newPass, function(error) {
+                    if(!error) {
+                        console.log('Entity bot2table inserted');   // Entity inserted
+                    }}); 
+                    console.log('Token is valid');
+                    session.send(`Tu cuenta ha cambiado de password, ahora es: **${randomid}**.`);
+                    session.send(`Recuerda que si estás en la red interna de Mainbit debes esperar 1 minuto antes de validar tu acceso, en caso de estar fuera de la red interna este proceso puede tardar hasta 10 minutos.`);
+                })
+                .catch(function(error) {
+                    throw error;
+            });
+    });
+}
 ]
