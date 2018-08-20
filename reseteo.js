@@ -56,8 +56,8 @@ function (session, results) {
                     session.endDialog(`Recuerda que si estás en la red interna de Mainbit debes esperar 1 minuto antes de validar tu acceso, en caso de estar fuera de la red interna este proceso puede tardar hasta 10 minutos.`);
                 })
                 .catch(function(error) {
-                    throw error;
                     session.endDialog('El código proporcionado es incorrecto.');
+                    throw error;
             });
     });
 }
