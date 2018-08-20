@@ -53,10 +53,11 @@ function (session, results) {
                     }}); 
                     console.log('Token is valid');
                     session.send(`Tu cuenta ha cambiado de password, ahora es: **${randomid}**.`);
-                    session.send(`Recuerda que si estás en la red interna de Mainbit debes esperar 1 minuto antes de validar tu acceso, en caso de estar fuera de la red interna este proceso puede tardar hasta 10 minutos.`);
+                    session.endDialog(`Recuerda que si estás en la red interna de Mainbit debes esperar 1 minuto antes de validar tu acceso, en caso de estar fuera de la red interna este proceso puede tardar hasta 10 minutos.`);
                 })
                 .catch(function(error) {
                     throw error;
+                    session.endDialog('El código proporcionado es incorrecto.');
             });
     });
 }
