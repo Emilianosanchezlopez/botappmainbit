@@ -46,9 +46,11 @@ bot.dialog('/', [
             case DialogLabels.Unlock:
                 return session.beginDialog('desbloqueo');
             case DialogLabels.Reset:
-                return session.beginDialog('reseteo');
+                return session.beginDialog('existe');
         }
     }
 ]);
 bot.dialog('desbloqueo', require('./desbloqueo'));
 bot.dialog('reseteo', require('./reseteo'));
+bot.dialog('existe', require('./existe'));
+bot.dialog('registro', require('./registro'));
